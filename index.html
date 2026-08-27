@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Portfolio</title>
+<style>
+:root { --bg:#0e0f12; --card:#1a1c21; --ink:#f3f1ea; --muted:#9a968c; --line:#2a2d34; --stuck:#e85d4c; --move:#3dba7a; --bread:#f0b429; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,system-ui,sans-serif}
+header{padding:16px 16px 8px}
+h1{margin:0;font-size:22px}
+.sub{color:var(--muted);font-size:13px;margin-top:4px}
+.board{display:flex;gap:10px;overflow-x:auto;padding:8px 16px 32px;scroll-snap-type:x mandatory}
+.col{min-width:86vw;max-width:420px;scroll-snap-align:start}
+.col h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 4px}
+.card{background:var(--card);border-radius:16px;padding:14px;margin:0 0 10px;border-left:4px solid var(--line)}
+.col.moving .card{border-left-color:var(--move)}
+.col.stuck .card{border-left-color:var(--stuck)}
+.col.bread .card{border-left-color:var(--bread)}
+.card b{display:block;font-size:17px;margin-bottom:6px}
+.card .bot{font-size:14px;line-height:1.35;color:#ddd}
+.tog{display:block;width:100%;margin-top:10px;background:transparent;border:0;color:#8ab4ff;font-size:14px;text-align:left;padding:0}
+.more{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:#ccc;line-height:1.45;white-space:pre-wrap}
+.card.open .more{display:block}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btns button{flex:1;min-height:44px;border:0;border-radius:12px;font-size:15px;font-weight:600}
+.go{background:#3dba7a;color:#082}
+.hold{background:#444;color:#eee}
+.no{background:#e85d4c;color:#fff}
+.thread{margin-top:12px}
+.thread h3{font-size:12px;color:var(--muted);margin:0 0 8px}
+.cmt{background:#111;border-radius:10px;padding:8px 10px;margin:0 0 6px;font-size:13px}
+.cmt .who{color:var(--muted);font-size:11px}
+form{display:flex;gap:8px;margin-top:8px}
+form textarea{flex:1;min-height:44px;border-radius:10px;border:1px solid var(--line);background:#111;color:var(--ink);padding:10px;font:inherit}
+form button{min-width:72px;min-height:44px;border:0;border-radius:10px;background:#8ab4ff;color:#111;font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <h1>Portfolio</h1>
+  <p class="sub">Glance the columns. Open a card for background. Comments ping Joseph. Buttons are for anything waiting on you.</p>
+</header>
+<div class="board" id="board"></div>
+<script>
+const CARDS = [
+  {id:"chaffey", col:"moving", title:"Chaffey", bot:"Shopify open. Ads returned 82c per dollar in the last verify window. Extra spend frozen.",
+   bg:"Shopify-verify means matching Meta's claimed wine sales to real Shopify orders.\n\n25 Jul–23 Aug: 164 paid orders A$34,107. Facebook-tagged 34 orders A$6,344. Ads spent A$7,781. Meta claimed 80 purchases; real Facebook tags are 34.\n\nAugust shop 1–26: A$29,019. Extra Meta spend stays frozen. Do not raise spend."},
+  {id:"auction", col:"moving", title:"Auction", bot:"Nick invoice Sat 29. Fabian trial Mon 31. Ange note unsent.",
+   bg:"Auction Masterclass is the online auction course. Nick's invoice is Saturday 29 Aug. Fabian's trial ends Monday 31 Aug.\n\nAnge's 13-seat posse note is staged and unsent. Send is a hard gate — a button will appear here when Joseph brings that GO."},
+  {id:"hark", col:"stuck", title:"Hark", bot:"No workplace yes since 24 Aug. $0 doors are on.",
+   bg:"Workplace coffee means free samples to Adelaide offices and clinics, then weekly drops.\n\nNo named yes since 24 Aug. Print is one door in a suite, not the only door. Printing still needs a spend GO. Joseph is not asking for print today."},
+  {id:"taco", col:"stuck", title:"Taco Libre", bot:"Shop is ours. No named floor lead. No Friday until that lands.",
+   bg:"23 Duthy Street, Parkside. Keys: yes. Eleni has vacated. Public listings that still show Eleni are stale.\n\nNamed floor lead: none. Joseph will not pick a first Friday until a named person is running the floor. Do not contact Sam."},
+  {id:"affiliate", col:"stuck", title:"Affiliate video", bot:"US first-3 mapped. No public social URL. Do not apply yet.",
+   bg:"US onsite-video engine. First-3 exact-ASIN on amazon.com: HAPBEAR mat B0CRDRHVQJ, glass holders B0FL7QTZWR, pepper mill B09CGF1RJS.\n\nBestPickd Associates was rejected 3 Aug for 180-day / 3-sale inactivity, not a violation. Amazon said reapply anytime.\n\nApply and upload are publish/commit. No social URL exists yet. YouTube handle staged, not created."}
+];
+function load(){ try{return JSON.parse(localStorage.getItem("pb-c")||"{}")}catch(e){return {}} }
+function save(d){ localStorage.setItem("pb-c", JSON.stringify(d)); }
+function render(){
+  const comments = load();
+  const cols = {moving:[], stuck:[], bread:[]};
+  CARDS.forEach(c => cols[c.col].push(c));
+  const names = {moving:"Moving", stuck:"Stuck", bread:"Waiting on you"};
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+  Object.keys(cols).forEach(k=>{
+    const col = document.createElement("div");
+    col.className = "col "+k;
+    col.innerHTML = "<h2>"+names[k]+"</h2>";
+    cols[k].forEach(c=>{
+      const el = document.createElement("div");
+      el.className = "card";
+      el.id = c.id;
+      const thread = (comments[c.id]||[]).map(x=>`<div class="cmt"><div class="who">${x.who} · ${x.at}</div>${x.text}</div>`).join("");
+      el.innerHTML = `<b>${c.title}</b><p class="bot">${c.bot}</p>
+        <button class="tog" type="button">Open background</button>
+        <div class="more">${c.bg}</div>
+        <div class="thread"><h3>Notes</h3>${thread}
+          <form data-id="${c.id}"><textarea name="t" placeholder="Ask or comment…" required></textarea><button type="submit">Ping</button></form>
+        </div>`;
+      el.querySelector(".tog").onclick = ()=>{ el.classList.toggle("open"); el.querySelector(".tog").textContent = el.classList.contains("open")?"Hide background":"Open background"; };
+      el.querySelector("form").onsubmit = (e)=>{
+        e.preventDefault();
+        const text = e.target.t.value.trim(); if(!text) return;
+        const d = load(); d[c.id]=d[c.id]||[];
+        d[c.id].push({who:"Theo", at:new Date().toLocaleString("en-AU",{timeZone:"Australia/Adelaide"}), text});
+        save(d);
+        ping({type:"comment", cardId:c.id, text});
+        e.target.reset(); render();
+        location.hash = c.id;
+      };
+      col.appendChild(el);
+    });
+    if(!cols[k].length){
+      const empty=document.createElement("div");
+      empty.className="card"; empty.innerHTML="<p class='bot'>Nothing here.</p>";
+      col.appendChild(empty);
+    }
+    board.appendChild(col);
+  });
+}
+function ping(payload){
+  const url = window.JOSEPH_WEBHOOK;
+  if(!url){ console.log("queued", payload); return; }
+  fetch(url, {method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify(payload)}).catch(()=>{});
+}
+render();
+</script>
+</body>
+</html>
