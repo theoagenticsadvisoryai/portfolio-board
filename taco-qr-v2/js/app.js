@@ -124,6 +124,13 @@
     return String(phone || "").replace(/\D/g, "");
   }
 
+  function smsHref(phone, body) {
+    var n = digits(phone);
+    var sep = /iPhone|iPad|iPod/i.test(navigator.userAgent) ? "&" : "?";
+    return "sms:" + n + sep + "body=" + encodeURIComponent(body || "");
+  }
+
+
   function upsertCustomer(name, phone, orderId) {
     var d = digits(phone);
     var list = customers();
@@ -425,17 +432,25 @@
       var dine = o.mode === "dine-in";
       var ready = o.status === "ready";
       var sms = readySms(o);
+      var phone = o.phone || "";
       return (
         '<article class="ticket' + (dine ? " dine" : "") + (ready ? " ready" : "") + '">' +
           '<div class="ticket-head">' + (dine ? "DINE IN" : "TAKEAWAY") + "</div>" +
           '<div class="num">#' + o.id + "</div>" +
+          '<div class="guest">' +
+            '<strong>' + esc(o.name || "No name") + '</strong>' +
+            (phone ? '<a href="tel:' + esc(digits(phone)) + '">' + esc(phone) + '</a>' : '<span>No number</span>') +
+          '</div>' +
           ticketLinesHtml(o) +
           (ready
             ? ""
             : '<button class="btn small" type="button" data-act="ready" data-id="' + o.id + '">Mark Ready</button>') +
-          '<div class="sms"><span class="cap">' +
-            (ready ? "Would have sent — not sent" : "Ready SMS — not sent") +
-          "</span>" + esc(sms) + "</div>" +
+          '<div class="sms">' +
+            '<span class="cap">Message</span>' +
+            '<textarea id="sms-body-' + o.id + '" rows="3">' + esc(sms) + '</textarea>' +
+            '<button class="btn small" type="button" data-act="sms-manual" data-id="' + o.id + '"' +
+              (digits(phone).length < 8 ? " disabled" : "") + '>SMS them manually</button>' +
+          '</div>' +
         "</article>"
       );
     }).join("");
@@ -536,7 +551,8 @@
           noSalsa: !!u.noSalsa,
           heat: u.noSalsa ? "" : (u.heat || "medium"),
           noCheese: !!u.noCheese,
-          noCoriander: !!u.noCoriander
+          noCoriander: !!u.noCoriander,
+          noMushroom: !!u.noMushroom
         };
       })
     };
@@ -630,6 +646,19 @@
     }
     if (act === "send") {
       placeOrder();
+      return;
+    }
+    if (act === "sms-manual") {
+      var sid = parseInt(t.getAttribute("data-id"), 10);
+      var slist = orders();
+      var so = null;
+      for (var j = 0; j < slist.length; j++) {
+        if (slist[j].id === sid) so = slist[j];
+      }
+      if (!so || digits(so.phone).length < 8) return;
+      var ta = document.getElementById("sms-body-" + sid);
+      var body = ta ? ta.value : readySms(so);
+      window.location.href = smsHref(so.phone, body);
       return;
     }
     if (act === "ready") {

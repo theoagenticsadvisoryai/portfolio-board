@@ -488,6 +488,28 @@ label.field input:focus { outline: 2px solid var(--amber); outline-offset: 1px; 
   display: block;
   margin-bottom: 4px;
 }
+
+.ticket .guest {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 6px 0 10px;
+  font-family: var(--serif);
+  font-size: 18px;
+}
+.ticket .guest a { color: var(--cobalt, #3A5A8C); font-weight: 700; text-decoration: none; }
+.sms textarea {
+  display: block;
+  width: 100%;
+  margin: 6px 0 8px;
+  min-height: 72px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: var(--cream-paper, #fff);
+  color: var(--ink);
+  font-family: var(--hand);
+  font-size: 15px;
+}
 .empty { font-family: var(--hand); color: var(--cream-dim); text-align: center; padding: 24px 8px; }
 
 /* —— admin —— */
