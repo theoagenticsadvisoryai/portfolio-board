@@ -29,6 +29,9 @@ h1{margin:0;font-size:22px}
 .card.moving{border-left-color:var(--move)}
 .card.stuck{border-left-color:var(--stuck)}
 .card.bread{border-left-color:var(--bread)}
+.card.room{border-left-color:#8ab4ff}
+.pill.room{background:#8ab4ff}
+.card.room form textarea{min-height:72px}
 .row{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
 .card b{font-size:16px}
 .pill{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#111;background:#666;border-radius:999px;padding:3px 8px;white-space:nowrap}
@@ -77,6 +80,21 @@ const BRANDS = [
   {id:"affiliate", name:"Affiliate"}
 ];
 const TILES = [
+  {id:"chaffey-room", brand:"chaffey", status:"room", room:true, title:"Room",
+    bot:"Kick off something new for Chaffey. Not a project tile.",
+    bg:"This is the Chaffey room. Use it for ideas, questions, or a new piece of work that does not have a tile yet. Joseph treats a ping here as a new start."},
+  {id:"hark-room", brand:"hark", status:"room", room:true, title:"Room",
+    bot:"Kick off something new for Hark. Not a project tile.",
+    bg:"This is the Hark room. Use it for ideas, questions, or a new piece of work that does not have a tile yet. Joseph treats a ping here as a new start."},
+  {id:"taco-room", brand:"taco", status:"room", room:true, title:"Room",
+    bot:"Kick off something new for Taco Libre. Not a project tile.",
+    bg:"This is the Taco room. Use it for ideas, questions, or a new piece of work that does not have a tile yet. Joseph treats a ping here as a new start."},
+  {id:"auction-room", brand:"auction", status:"room", room:true, title:"Room",
+    bot:"Kick off something new for Auction. Not a project tile.",
+    bg:"This is the Auction room. Use it for ideas, questions, or a new piece of work that does not have a tile yet. Joseph treats a ping here as a new start."},
+  {id:"affiliate-room", brand:"affiliate", status:"room", room:true, title:"Room",
+    bot:"Kick off something new for Affiliate video. Not a project tile.",
+    bg:"This is the Affiliate room. Use it for ideas, questions, or a new piece of work that does not have a tile yet. Joseph treats a ping here as a new start."},
   {id:"chaffey-shopify", brand:"chaffey", status:"moving", title:"Shopify pairing",
     bot:"Measured. Extra Meta stays frozen.",
     bg:"Shopify-verify means matching Meta's claimed wine sales to real Shopify orders.\n\n25 Jul–23 Aug: 164 paid orders A$34,107. Facebook-tagged 34 orders A$6,344. Ads spent A$7,781. Meta claimed 80 purchases; real tags are 34.\n\nAugust shop 1–26: A$29,019. Do not raise spend."},
@@ -117,7 +135,7 @@ const TILES = [
     bot:"None yet. This blocks apply.",
     bg:"Amazon wants a public YouTube, Instagram, Facebook or TikTok URL. None found. Handle staged as YouTube @handsonasin. Channel not created. Creating it is publish."},
 ];
-const LABELS = {moving:"Moving", stuck:"Stuck", bread:"Your call"};
+const LABELS = {moving:"Moving", stuck:"Stuck", bread:"Your call", room:"Room"};
 const MIGRATE = {chaffey:"chaffey-shopify", auction:"auction-nick", hark:"hark-workplaces", taco:"taco-duthy", affiliate:"aff-map"};
 
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -182,17 +200,20 @@ function renderTiles(){
     el.className = "card "+t.status;
     el.id = t.id;
     const thread = (comments[t.id]||[]).map(x=>`<div class="cmt"><div class="who">${esc(x.who)} · ${esc(x.at)}</div>${esc(x.text)}</div>`).join("");
+    if(t.room) el.classList.add("open");
+    const ph = t.room ? "Kick something off…" : "Ask or comment…";
+    const togLabel = t.room ? "What this is" : "Open";
     el.innerHTML = `<div class="row"><b>${esc(t.title)}</b><span class="pill ${t.status}">${LABELS[t.status]}</span></div>
       <p class="bot">${esc(t.bot)}</p>
-      <button class="tog" type="button">Open</button>
+      <button class="tog" type="button">${togLabel}</button>
       <div class="more">${esc(t.bg)}</div>
-      <div class="thread"><h3>Notes</h3>${thread}
-        <form><textarea name="t" placeholder="Ask or comment…" required></textarea><button type="submit">Ping</button></form>
+      <div class="thread"><h3>${t.room ? "Room" : "Notes"}</h3>${thread}
+        <form><textarea name="t" placeholder="${ph}" required></textarea><button type="submit">Ping</button></form>
         <div class="ok" hidden></div>
       </div>`;
     el.querySelector(".tog").onclick = ()=>{
       el.classList.toggle("open");
-      el.querySelector(".tog").textContent = el.classList.contains("open") ? "Hide" : "Open";
+      el.querySelector(".tog").textContent = el.classList.contains("open") ? "Hide" : (t.room ? "What this is" : "Open");
     };
     const form = el.querySelector("form");
     const ok = el.querySelector(".ok");
