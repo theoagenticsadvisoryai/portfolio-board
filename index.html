@@ -3,31 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
 <title>Portfolio</title>
 <style>
 :root { --bg:#0e0f12; --card:#1a1c21; --ink:#f3f1ea; --muted:#9a968c; --line:#2a2d34; --stuck:#e85d4c; --move:#3dba7a; --bread:#f0b429; }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,system-ui,sans-serif}
-header{padding:16px 16px 8px}
+#gate{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9;padding:24px}
+#gate.hid{display:none}
+#app.hid{display:none}
+.pin-dots{display:flex;gap:12px;margin:16px 0 24px}
+.pin-dots i{width:14px;height:14px;border-radius:50%;border:2px solid #666}
+.pin-dots i.on{background:#f3f1ea;border-color:#f3f1ea}
+.pad{display:grid;grid-template-columns:repeat(3,88px);gap:12px}
+.pad button{height:64px;border-radius:32px;border:0;background:#1a1c21;color:var(--ink);font-size:24px;font-weight:600}
+.pad .gone{visibility:hidden}
+.err{color:var(--stuck);min-height:20px;font-size:14px}
+header{padding:16px 16px 0}
 h1{margin:0;font-size:22px}
-.sub{color:var(--muted);font-size:13px;margin-top:4px}
-.board{display:flex;gap:10px;overflow-x:auto;padding:8px 16px 32px;scroll-snap-type:x mandatory}
-.col{min-width:86vw;max-width:420px;scroll-snap-align:start}
-.col h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 4px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 16px 8px;scrollbar-width:none}
+.tabs button{flex:0 0 auto;border:0;border-radius:999px;padding:10px 14px;background:#1a1c21;color:var(--muted);font-size:14px;font-weight:600}
+.tabs button.on{background:#f3f1ea;color:#111}
+.tiles{padding:8px 16px 40px}
 .card{background:var(--card);border-radius:16px;padding:14px;margin:0 0 10px;border-left:4px solid var(--line)}
-.col.moving .card{border-left-color:var(--move)}
-.col.stuck .card{border-left-color:var(--stuck)}
-.col.bread .card{border-left-color:var(--bread)}
-.card b{display:block;font-size:17px;margin-bottom:6px}
-.card .bot{font-size:14px;line-height:1.35;color:#ddd}
+.card.moving{border-left-color:var(--move)}
+.card.stuck{border-left-color:var(--stuck)}
+.card.bread{border-left-color:var(--bread)}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.card b{font-size:16px}
+.pill{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#111;background:#666;border-radius:999px;padding:3px 8px;white-space:nowrap}
+.pill.moving{background:var(--move)}
+.pill.stuck{background:var(--stuck);color:#fff}
+.pill.bread{background:var(--bread)}
+.bot{font-size:14px;line-height:1.35;color:#ddd;margin:8px 0 0}
 .tog{display:block;width:100%;margin-top:10px;background:transparent;border:0;color:#8ab4ff;font-size:14px;text-align:left;padding:0}
 .more{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:#ccc;line-height:1.45;white-space:pre-wrap}
 .card.open .more{display:block}
-.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.btns button{flex:1;min-height:44px;border:0;border-radius:12px;font-size:15px;font-weight:600}
-.go{background:#3dba7a;color:#082}
-.hold{background:#444;color:#eee}
-.no{background:#e85d4c;color:#fff}
 .thread{margin-top:12px}
 .thread h3{font-size:12px;color:var(--muted);margin:0 0 8px}
 .cmt{background:#111;border-radius:10px;padding:8px 10px;margin:0 0 6px;font-size:13px}
@@ -35,78 +46,188 @@ h1{margin:0;font-size:22px}
 form{display:flex;gap:8px;margin-top:8px}
 form textarea{flex:1;min-height:44px;border-radius:10px;border:1px solid var(--line);background:#111;color:var(--ink);padding:10px;font:inherit}
 form button{min-width:72px;min-height:44px;border:0;border-radius:10px;background:#8ab4ff;color:#111;font-weight:700}
+.ok{color:#3dba7a;font-size:12px;margin-top:6px}
 </style>
 </head>
 <body>
-<header>
+<div id="gate">
   <h1>Portfolio</h1>
-  <p class="sub">Glance the columns. Open a card for background. Comments ping Joseph. Buttons are for anything waiting on you.</p>
-</header>
-<div class="board" id="board"></div>
+  <p class="err" id="perr"></p>
+  <div class="pin-dots" id="dots"><i></i><i></i><i></i><i></i></div>
+  <div class="pad">
+    <button type="button">1</button><button type="button">2</button><button type="button">3</button>
+    <button type="button">4</button><button type="button">5</button><button type="button">6</button>
+    <button type="button">7</button><button type="button">8</button><button type="button">9</button>
+    <button type="button" class="gone"> </button><button type="button">0</button><button type="button" id="bk">⌫</button>
+  </div>
+</div>
+<div id="app" class="hid">
+  <header><h1>Portfolio</h1></header>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="tiles" id="tiles"></div>
+</div>
 <script>
-const CARDS = [
-  {id:"chaffey", col:"moving", title:"Chaffey", bot:"Shopify open. Ads returned 82c per dollar in the last verify window. Extra spend frozen.",
-   bg:"Shopify-verify means matching Meta's claimed wine sales to real Shopify orders.\n\n25 Jul–23 Aug: 164 paid orders A$34,107. Facebook-tagged 34 orders A$6,344. Ads spent A$7,781. Meta claimed 80 purchases; real Facebook tags are 34.\n\nAugust shop 1–26: A$29,019. Extra Meta spend stays frozen. Do not raise spend."},
-  {id:"auction", col:"moving", title:"Auction", bot:"Nick invoice Sat 29. Fabian trial Mon 31. Ange note unsent.",
-   bg:"Auction Masterclass is the online auction course. Nick's invoice is Saturday 29 Aug. Fabian's trial ends Monday 31 Aug.\n\nAnge's 13-seat posse note is staged and unsent. Send is a hard gate — a button will appear here when Joseph brings that GO."},
-  {id:"hark", col:"stuck", title:"Hark", bot:"No workplace yes since 24 Aug. $0 doors are on.",
-   bg:"Workplace coffee means free samples to Adelaide offices and clinics, then weekly drops.\n\nNo named yes since 24 Aug. Print is one door in a suite, not the only door. Printing still needs a spend GO. Joseph is not asking for print today."},
-  {id:"taco", col:"stuck", title:"Taco Libre", bot:"Shop is ours. No named floor lead. No Friday until that lands.",
-   bg:"23 Duthy Street, Parkside. Keys: yes. Eleni has vacated. Public listings that still show Eleni are stale.\n\nNamed floor lead: none. Joseph will not pick a first Friday until a named person is running the floor. Do not contact Sam."},
-  {id:"affiliate", col:"stuck", title:"Affiliate video", bot:"US first-3 mapped. No public social URL. Do not apply yet.",
-   bg:"US onsite-video engine. First-3 exact-ASIN on amazon.com: HAPBEAR mat B0CRDRHVQJ, glass holders B0FL7QTZWR, pepper mill B09CGF1RJS.\n\nBestPickd Associates was rejected 3 Aug for 180-day / 3-sale inactivity, not a violation. Amazon said reapply anytime.\n\nApply and upload are publish/commit. No social URL exists yet. YouTube handle staged, not created."}
+const PINH = "aa34ebf9c54cfad3bde3b9f51aed2b34e6ed6069c722d3dca50a1c5b96aa4eac";
+const TOPIC = "engela-pb-7k2m9q4x";
+const BRANDS = [
+  {id:"chaffey", name:"Chaffey"},
+  {id:"hark", name:"Hark"},
+  {id:"taco", name:"Taco"},
+  {id:"auction", name:"Auction"},
+  {id:"affiliate", name:"Affiliate"}
 ];
+const TILES = [
+  {id:"chaffey-shopify", brand:"chaffey", status:"moving", title:"Shopify pairing",
+    bot:"Measured. Extra Meta stays frozen.",
+    bg:"Shopify-verify means matching Meta's claimed wine sales to real Shopify orders.\n\n25 Jul–23 Aug: 164 paid orders A$34,107. Facebook-tagged 34 orders A$6,344. Ads spent A$7,781. Meta claimed 80 purchases; real tags are 34.\n\nAugust shop 1–26: A$29,019. Do not raise spend."},
+  {id:"chaffey-meta", brand:"chaffey", status:"stuck", title:"Extra Meta spend",
+    bot:"Frozen at 82c back per dollar.",
+    bg:"Live engine is already running. C-TEST is already live. A second A$50 test is not the move.\n\nHold extra spend until pairing says otherwise."},
+  {id:"chaffey-sia", brand:"chaffey", status:"stuck", title:"SIA wine tender",
+    bot:"TR2486 still unknown. No outreach.",
+    bg:"Wine tender through SIA. Status of bid TR2486 is unknown. No Ariba mail found. Do not contact anyone until a file says otherwise."},
+  {id:"hark-workplaces", brand:"hark", status:"stuck", title:"Workplace samples",
+    bot:"No named yes since 24 Aug. $0 doors are on.",
+    bg:"Free samples to Adelaide offices and clinics, then weekly drops.\n\nNo named yes since 24 Aug. Delivery and follow-up are the constraint, not roasting. Do not contact Sam or prospects."},
+  {id:"hark-print", brand:"hark", status:"stuck", title:"Print door",
+    bot:"One door in a suite. No spend ask today.",
+    bg:"Print is one way to sell more coffee, not the only door. A flyer still needs a spend GO. Joseph is not asking for print today."},
+  {id:"taco-duthy", brand:"taco", status:"stuck", title:"23 Duthy floor",
+    bot:"Shop is ours. No named floor lead.",
+    bg:"23 Duthy Street, Parkside. Keys: yes. Eleni has vacated. Public listings that still show Eleni are stale.\n\nNamed floor lead: none. No first Friday until a named person is running the floor. Do not contact Sam."},
+  {id:"taco-qr", brand:"taco", status:"moving", title:"QR tap-through",
+    bot:"Branded demo staged. No live cards.",
+    bg:"Table QR for ordering. DIY branded demo is staged. No live payments. No spend. Parks until a floor lead exists."},
+  {id:"auction-nick", brand:"auction", status:"moving", title:"Nick invoice",
+    bot:"Saturday 29 Aug, 3:54pm Adelaide.",
+    bg:"Auction Masterclass invoice for Nick. Confirmed Saturday 29 August 2026 at 3:54pm Adelaide."},
+  {id:"auction-fabian", brand:"auction", status:"moving", title:"Fabian trial",
+    bot:"Monday 31 Aug, 10:27am Adelaide.",
+    bg:"Fabian's trial ends Monday 31 August 2026 at 10:27am Adelaide."},
+  {id:"auction-ange", brand:"auction", status:"stuck", title:"Ange 13-seat note",
+    bot:"Staged. Unsent. Send is a gate.",
+    bg:"Ange's posse is 13 seats, about $377/month after 22 Sep, including unused seats. The note is staged. Send is a hard gate. Joseph is not asking today."},
+  {id:"auction-meta", brand:"auction", status:"stuck", title:"Meta access",
+    bot:"Advertiser not assigned on the ad account.",
+    bg:"Auction ad account 1071923630987205. Partner share is on. Nobody is assigned Advertiser yet, so Meta stays parked."},
+  {id:"aff-map", brand:"affiliate", status:"moving", title:"US first-3 map",
+    bot:"Film order locked. No filming ask.",
+    bg:"Exact-ASIN live on amazon.com: HAPBEAR mat B0CRDRHVQJ, glass holders B0FL7QTZWR, pepper mill B09CGF1RJS.\n\nLocked order: mat, then holders, then mill. Tapers are the pair only. No filming ask."},
+  {id:"aff-social", brand:"affiliate", status:"stuck", title:"Public social URL",
+    bot:"None yet. This blocks apply.",
+    bg:"Amazon wants a public YouTube, Instagram, Facebook or TikTok URL. None found. Handle staged as YouTube @handsonasin. Channel not created. Creating it is publish."},
+  {id:"aff-apply", brand:"affiliate", status:"stuck", title:"Apply / upload",
+    bot:"Do not apply. Do not upload.",
+    bg:"BestPickd Associates closed 3 Aug for 180-day / 3-sale inactivity, not a violation. Amazon said reapply anytime.\n\nApply and upload are publish or commit. No GO."}
+];
+const LABELS = {moving:"Moving", stuck:"Stuck", bread:"Your call"};
+const MIGRATE = {chaffey:"chaffey-shopify", auction:"auction-nick", hark:"hark-workplaces", taco:"taco-duthy", affiliate:"aff-map"};
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+async function hashPin(p){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(p+":pb-v2"));
+  return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
 function load(){ try{return JSON.parse(localStorage.getItem("pb-c")||"{}")}catch(e){return {}} }
 function save(d){ localStorage.setItem("pb-c", JSON.stringify(d)); }
-function render(){
-  const comments = load();
-  const cols = {moving:[], stuck:[], bread:[]};
-  CARDS.forEach(c => cols[c.col].push(c));
-  const names = {moving:"Moving", stuck:"Stuck", bread:"Waiting on you"};
-  const board = document.getElementById("board");
-  board.innerHTML = "";
-  Object.keys(cols).forEach(k=>{
-    const col = document.createElement("div");
-    col.className = "col "+k;
-    col.innerHTML = "<h2>"+names[k]+"</h2>";
-    cols[k].forEach(c=>{
-      const el = document.createElement("div");
-      el.className = "card";
-      el.id = c.id;
-      const thread = (comments[c.id]||[]).map(x=>`<div class="cmt"><div class="who">${x.who} · ${x.at}</div>${x.text}</div>`).join("");
-      el.innerHTML = `<b>${c.title}</b><p class="bot">${c.bot}</p>
-        <button class="tog" type="button">Open background</button>
-        <div class="more">${c.bg}</div>
-        <div class="thread"><h3>Notes</h3>${thread}
-          <form data-id="${c.id}"><textarea name="t" placeholder="Ask or comment…" required></textarea><button type="submit">Ping</button></form>
-        </div>`;
-      el.querySelector(".tog").onclick = ()=>{ el.classList.toggle("open"); el.querySelector(".tog").textContent = el.classList.contains("open")?"Hide background":"Open background"; };
-      el.querySelector("form").onsubmit = (e)=>{
-        e.preventDefault();
-        const text = e.target.t.value.trim(); if(!text) return;
-        const d = load(); d[c.id]=d[c.id]||[];
-        d[c.id].push({who:"Theo", at:new Date().toLocaleString("en-AU",{timeZone:"Australia/Adelaide"}), text});
-        save(d);
-        ping({type:"comment", cardId:c.id, text});
-        e.target.reset(); render();
-        location.hash = c.id;
-      };
-      col.appendChild(el);
-    });
-    if(!cols[k].length){
-      const empty=document.createElement("div");
-      empty.className="card"; empty.innerHTML="<p class='bot'>Nothing here.</p>";
-      col.appendChild(empty);
+function migrate(d){
+  Object.keys(MIGRATE).forEach(old=>{
+    if(d[old] && d[old].length){
+      const nid = MIGRATE[old];
+      d[nid] = (d[nid]||[]).concat(d[old]);
+      delete d[old];
     }
-    board.appendChild(col);
+  });
+  return d;
+}
+function unlock(){
+  document.getElementById("gate").classList.add("hid");
+  document.getElementById("app").classList.remove("hid");
+  renderTabs();
+}
+let pin = "";
+function setDots(){
+  [...document.querySelectorAll("#dots i")].forEach((el,i)=> el.classList.toggle("on", i<pin.length));
+}
+document.querySelector(".pad").addEventListener("click", async (e)=>{
+  const b = e.target.closest("button"); if(!b) return;
+  const err = document.getElementById("perr");
+  if(b.id==="bk"){ pin = pin.slice(0,-1); err.textContent=""; setDots(); return; }
+  const n = b.textContent.trim(); if(!/^\d$/.test(n) || pin.length>=4) return;
+  pin += n; setDots();
+  if(pin.length<4) return;
+  if(await hashPin(pin)===PINH){
+    localStorage.setItem("pb-ok", String(Date.now()+12*60*60*1000));
+    unlock();
+  } else {
+    err.textContent = "Wrong pin";
+    pin = ""; setDots();
+  }
+});
+if(Number(localStorage.getItem("pb-ok")||0) > Date.now()) unlock();
+
+let brand = "chaffey";
+function renderTabs(){
+  const tabs = document.getElementById("tabs");
+  tabs.innerHTML = BRANDS.map(b=>`<button type="button" data-id="${b.id}" class="${b.id===brand?"on":""}">${b.name}</button>`).join("");
+  tabs.onclick = (e)=>{
+    const btn = e.target.closest("button"); if(!btn) return;
+    brand = btn.dataset.id; renderTabs();
+  };
+  renderTiles();
+}
+function renderTiles(){
+  const comments = migrate(load()); save(comments);
+  const box = document.getElementById("tiles");
+  box.innerHTML = "";
+  TILES.filter(t=>t.brand===brand).forEach(t=>{
+    const el = document.createElement("div");
+    el.className = "card "+t.status;
+    el.id = t.id;
+    const thread = (comments[t.id]||[]).map(x=>`<div class="cmt"><div class="who">${esc(x.who)} · ${esc(x.at)}</div>${esc(x.text)}</div>`).join("");
+    el.innerHTML = `<div class="row"><b>${esc(t.title)}</b><span class="pill ${t.status}">${LABELS[t.status]}</span></div>
+      <p class="bot">${esc(t.bot)}</p>
+      <button class="tog" type="button">Open</button>
+      <div class="more">${esc(t.bg)}</div>
+      <div class="thread"><h3>Notes</h3>${thread}
+        <form><textarea name="t" placeholder="Ask or comment…" required></textarea><button type="submit">Ping</button></form>
+        <div class="ok" hidden></div>
+      </div>`;
+    el.querySelector(".tog").onclick = ()=>{
+      el.classList.toggle("open");
+      el.querySelector(".tog").textContent = el.classList.contains("open") ? "Hide" : "Open";
+    };
+    const form = el.querySelector("form");
+    const ok = el.querySelector(".ok");
+    form.onsubmit = async (e)=>{
+      e.preventDefault();
+      const text = form.t.value.trim(); if(!text) return;
+      const d = load(); d[t.id]=d[t.id]||[];
+      d[t.id].push({who:"Theo", at:new Date().toLocaleString("en-AU",{timeZone:"Australia/Adelaide"}), text});
+      save(d);
+      form.querySelector("button").disabled = true;
+      const sent = await ping({type:"comment", cardId:t.id, brand, title:t.title, text});
+      form.t.value = "";
+      form.querySelector("button").disabled = false;
+      ok.hidden = false;
+      ok.textContent = sent ? "Joseph has it." : "Saved on this phone. Joseph may not have it yet.";
+      renderTiles();
+      const keep = document.getElementById(t.id);
+      if(keep){ keep.classList.add("open"); keep.querySelector(".tog").textContent="Hide"; }
+    };
+    box.appendChild(el);
   });
 }
-function ping(payload){
-  const url = window.JOSEPH_WEBHOOK;
-  if(!url){ console.log("queued", payload); return; }
-  fetch(url, {method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify(payload)}).catch(()=>{});
+async function ping(payload){
+  try{
+    const r = await fetch("https://ntfy.sh/"+TOPIC, {
+      method:"POST",
+      headers:{"title":"Board · "+payload.title, "tags":"speech_balloon"},
+      body: JSON.stringify(payload)
+    });
+    return r.ok;
+  }catch(e){ return false; }
 }
-render();
 </script>
 </body>
 </html>
