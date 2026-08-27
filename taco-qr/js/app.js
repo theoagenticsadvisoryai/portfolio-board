@@ -10,12 +10,12 @@
   };
 
   var MENU = [
-    { id: "birria", label: "Birria", pass: "BIRRIA", price: 8, kind: "taco" },
-    { id: "fish", label: "Fish", pass: "FISH", price: 8, kind: "taco" },
-    { id: "chicken", label: "Chicken chipotle", pass: "CHICKEN", price: 8, kind: "taco" },
-    { id: "quesadilla", label: "Mushroom quesadilla", pass: "QUESADILLA", price: 16, kind: "quesadilla" },
+    { id: "birria", label: "Birria", pass: "BIRRIA", price: 9, kind: "taco" },
+    { id: "fish", label: "Fish", pass: "FISH", price: 14, kind: "taco" },
+    { id: "chicken", label: "Chicken chipotle", pass: "CHICKEN", price: 9, kind: "taco" },
+    { id: "quesadilla", label: "Mushroom quesadilla", pass: "QUESADILLA", price: 9, kind: "quesadilla" },
     { id: "elotes", label: "Corn ribs", pass: "ELOTES", sub: "Elotes", price: 12, kind: "side" },
-    { id: "churros", label: "Nutella churros", pass: "CHURROS", sub: "Serve of 8 minis", price: 12, kind: "sweet" }
+    { id: "churros", label: "Nutella churros", pass: "CHURROS", sub: "Serve of 8 minis", price: 15, kind: "sweet" }
   ];
 
   var cart = {
