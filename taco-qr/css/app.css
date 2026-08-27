@@ -201,6 +201,30 @@ h1.screen-title {
   position: relative;
 }
 .item.gone { opacity: 0.45; }
+
+.item .subline {
+  margin: 2px 0 0;
+  font-family: var(--hand);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--cream-dim);
+}
+.item .price {
+  margin: 6px 0 0;
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--terracotta, #8B3A28);
+}
+.total-line {
+  font-family: var(--display);
+  font-size: 28px;
+  letter-spacing: 0.04em;
+  font-weight: 800;
+  margin: 12px 0 8px;
+}
+
 .item h2 {
   margin: 0;
   font-family: var(--serif);

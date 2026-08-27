@@ -10,8 +10,12 @@
   };
 
   var MENU = [
-    { id: "birria", label: "Birria", pass: "BIRRIA" },
-    { id: "fish", label: "Fish", pass: "FISH" }
+    { id: "birria", label: "Birria", pass: "BIRRIA", price: 8, kind: "taco" },
+    { id: "fish", label: "Fish", pass: "FISH", price: 8, kind: "taco" },
+    { id: "chicken", label: "Chicken chipotle", pass: "CHICKEN", price: 8, kind: "taco" },
+    { id: "quesadilla", label: "Mushroom quesadilla", pass: "QUESADILLA", price: 16, kind: "quesadilla" },
+    { id: "elotes", label: "Corn ribs", pass: "ELOTES", sub: "Elotes", price: 12, kind: "side" },
+    { id: "churros", label: "Nutella churros", pass: "CHURROS", sub: "Serve of 8 minis", price: 12, kind: "sweet" }
   ];
 
   var cart = {
@@ -102,14 +106,18 @@
       { name: "Rosa V", phone: "0412555010", orderIds: [41] },
       { name: "Tom Keane", phone: "0433555019", orderIds: [42] }
     ]);
-    save(KEY.eighty, { birria: false, fish: false });
+    save(KEY.eighty, { birria: false, fish: false, chicken: false, quesadilla: false, elotes: false, churros: false });
     save(KEY.nextId, 43);
     save(KEY.seeded, true);
   }
 
   function orders() { return load(KEY.orders, []); }
   function setOrders(list) { save(KEY.orders, list); }
-  function eighty() { return load(KEY.eighty, { birria: false, fish: false }); }
+  function eighty() {
+    var e = load(KEY.eighty, {});
+    MENU.forEach(function (m) { if (e[m.id] == null) e[m.id] = false; });
+    return e;
+  }
   function customers() { return load(KEY.customers, []); }
 
   function digits(phone) {
@@ -143,6 +151,10 @@
     return n;
   }
 
+  function money(n) {
+    return "$" + Number(n || 0).toFixed(0);
+  }
+
   function addUnit(sku) {
     cart.units.push({
       uid: "u" + Date.now() + Math.random().toString(16).slice(2),
@@ -150,6 +162,7 @@
       noSalsa: false,
       noCheese: false,
       noCoriander: false,
+      noMushroom: false,
       heat: "medium"
     });
   }
@@ -228,7 +241,9 @@
       var gone = !!six[m.id];
       return (
         '<div class="item' + (gone ? " gone" : "") + '">' +
-          '<h2>' + esc(m.label) + '</h2>' +
+          '<div><h2>' + esc(m.label) + '</h2>' +
+            (m.sub ? '<p class="subline">' + esc(m.sub) + '</p>' : '') +
+            '<p class="price">' + money(m.price) + '</p></div>' +
           (gone
             ? '<div class="stamp-86">86</div>'
             : '<div class="stepper">' +
@@ -262,22 +277,32 @@
   function viewMods() {
     var cards = cart.units.map(function (u, i) {
       var meta = skuMeta(u.sku);
+      var ticks = "";
       var heat = "";
-      if (!u.noSalsa) {
-        heat =
-          '<div class="heat">' +
-            '<button type="button" class="hot' + (u.heat === "hot" ? " on" : "") + '" data-act="heat" data-uid="' + u.uid + '" data-heat="hot">Hot</button>' +
-            '<button type="button" class="med' + (u.heat === "medium" ? " on" : "") + '" data-act="heat" data-uid="' + u.uid + '" data-heat="medium">Medium</button>' +
-          '</div>';
-      }
-      return (
-        '<div class="mod-card">' +
-          '<div class="who">' + esc(meta.pass) + " · " + (i + 1) + "</div>" +
+      if (meta.kind === "taco") {
+        if (!u.noSalsa) {
+          heat =
+            '<div class="heat">' +
+              '<button type="button" class="hot' + (u.heat === "hot" ? " on" : "") + '" data-act="heat" data-uid="' + u.uid + '" data-heat="hot">Hot</button>' +
+              '<button type="button" class="med' + (u.heat === "medium" ? " on" : "") + '" data-act="heat" data-uid="' + u.uid + '" data-heat="medium">Medium</button>' +
+            '</div>';
+        }
+        ticks =
           '<div class="ticks">' +
             tickBtn(u.noSalsa, "tick-salsa", u.uid, "No salsa") +
             tickBtn(u.noCheese, "tick-cheese", u.uid, "No cheese") +
             tickBtn(u.noCoriander, "tick-coriander", u.uid, "No coriander") +
-          "</div>" +
+          "</div>";
+      } else if (meta.kind === "quesadilla") {
+        ticks =
+          '<div class="ticks">' +
+            tickBtn(u.noMushroom, "tick-mushroom", u.uid, "No mushroom") +
+          "</div>";
+      }
+      return (
+        '<div class="mod-card">' +
+          '<div class="who">' + esc(meta.pass) + " · " + (i + 1) + " · " + money(meta.price) + "</div>" +
+          ticks +
           heat +
         "</div>"
       );
@@ -296,10 +321,15 @@
 
   function unitTicks(u) {
     var t = [];
-    if (u.noSalsa) t.push("No salsa");
-    else t.push(u.heat === "hot" ? "Hot" : "Medium");
-    if (u.noCheese) t.push("No cheese");
-    if (u.noCoriander) t.push("No coriander");
+    var kind = skuMeta(u.sku).kind;
+    if (kind === "quesadilla") {
+      if (u.noMushroom) t.push("No mushroom");
+    } else if (kind === "taco") {
+      if (u.noSalsa) t.push("No salsa");
+      else t.push(u.heat === "hot" ? "Hot" : "Medium");
+      if (u.noCheese) t.push("No cheese");
+      if (u.noCoriander) t.push("No coriander");
+    }
     return t;
   }
 
@@ -324,7 +354,7 @@
       var ticks = g.ticks.length
         ? '<span class="mods">' + esc(g.ticks.join(" · ")) + "</span>"
         : "";
-      return "<li><span>" + esc(skuMeta(g.sku).pass) + " ×" + g.qty + ticks + "</span></li>";
+      return "<li><span>" + esc(skuMeta(g.sku).pass) + " ×" + g.qty + ticks + "</span><span>" + money((skuMeta(g.sku).price || 0) * g.qty) + "</span></li>";
     }).join("");
     return (
       introBlock() +
@@ -340,6 +370,7 @@
       "</label>" +
       '<p class="err" id="f-err">' + esc(cart.err) + "</p>" +
       '<ul class="summary">' + lines + "</ul>" +
+      '<p class="total-line">Total ' + money(cart.units.reduce(function (s, u) { return s + (skuMeta(u.sku).price || 0); }, 0)) + '</p>' +
       '<p class="pay-note">Demo only. No card. No charge.</p>' +
       '<div class="sticky-cta">' +
         '<button class="btn" type="button" data-act="send">Send the ticket</button>' +
@@ -550,6 +581,13 @@
     if (act === "to-pay") {
       cart.step = "pay";
       cart.err = "";
+      render();
+      return;
+    }
+    if (act === "tick-mushroom") {
+      u = findUnit(uid);
+      if (!u) return;
+      u.noMushroom = !u.noMushroom;
       render();
       return;
     }
