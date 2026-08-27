@@ -175,53 +175,8 @@
 
   function windowArt() {
     return (
-      '<div class="window-wrap" aria-hidden="true">' +
-        '<svg viewBox="0 0 320 332" xmlns="http://www.w3.org/2000/svg">' +
-          '<defs>' +
-            '<pattern id="stip" width="9" height="8" patternUnits="userSpaceOnUse">' +
-              '<path d="M0.8 2.2 h3.1" stroke="#2F3D2C" stroke-width="0.65" fill="none" opacity="0.32"/>' +
-              '<path d="M4.6 6.1 h2.4" stroke="#2F3D2C" stroke-width="0.5" fill="none" opacity="0.2"/>' +
-            '</pattern>' +
-            '<clipPath id="frameClip">' +
-              '<rect x="110" y="66" width="100" height="192"/>' +
-            '</clipPath>' +
-          '</defs>' +
-          '<rect width="320" height="332" fill="#F3E6C8"/>' +
-          '<text x="160" y="48" text-anchor="middle" font-family="Big Shoulders Display, Anton, Impact, sans-serif" font-weight="800" font-size="54" letter-spacing="7" fill="#2F3D2C">TACO</text>' +
-          '<rect x="106" y="62" width="108" height="200" fill="#F3E6C8" stroke="#2F3D2C" stroke-width="2.6"/>' +
-          '<rect x="110" y="66" width="100" height="192" fill="url(#stip)" stroke="#2F3D2C" stroke-width="0.7"/>' +
-          '<g clip-path="url(#frameClip)">' +
-            '<g fill="#2F3D2C">' +
-              '<path d="M141 108 C141 84 179 84 179 108 Z"/>' +
-              '<rect x="141" y="102" width="38" height="7"/>' +
-              '<ellipse cx="160" cy="112" rx="48" ry="9"/>' +
-              '<path d="M143 114 C143 114 141 120 141 134 C141 152 149 160 160 162 C171 160 179 152 179 134 C179 120 177 114 177 114 C170 111 150 111 143 114 Z"/>' +
-              '<rect x="154" y="160" width="12" height="10"/>' +
-              '<path d="M128 170 L192 170 L204 256 L116 256 Z"/>' +
-              '<path d="M128 170 L116 190 L128 190 Z"/>' +
-              '<path d="M192 170 L204 190 L192 190 Z"/>' +
-            '</g>' +
-            '<ellipse cx="151.5" cy="132" rx="5.6" ry="4.3" fill="#F3E6C8"/>' +
-            '<ellipse cx="168.5" cy="132" rx="5.6" ry="4.3" fill="#F3E6C8"/>' +
-            '<path d="M160 119 L163.4 125.5 H156.6 Z" fill="#F3E6C8"/>' +
-            '<rect x="156" y="146" width="8" height="2.2" rx="1" fill="#F3E6C8"/>' +
-            '<g fill="#F3E6C8">' +
-              '<circle cx="146" cy="190" r="5.2"/>' +
-              '<circle cx="174" cy="190" r="5.2"/>' +
-              '<circle cx="160" cy="210" r="5.2"/>' +
-              '<circle cx="144" cy="228" r="5.2"/>' +
-              '<circle cx="176" cy="228" r="5.2"/>' +
-              '<circle cx="160" cy="246" r="5.2"/>' +
-            '</g>' +
-          '</g>' +
-          '<text x="160" y="296" text-anchor="middle" font-family="Big Shoulders Display, Anton, Impact, sans-serif" font-weight="800" font-size="46" letter-spacing="6" fill="#2F3D2C">LIBRE</text>' +
-          '<g fill="#2F3D2C" transform="translate(28,286)">' +
-            '<path d="M16 28 L15 4 l2 3 Z M16 28 L6 10 l4 3 Z M16 28 L26 10 l-4 3 Z M16 28 L2 20 l5 2 Z M16 28 L30 20 l-5 2 Z"/>' +
-          '</g>' +
-          '<g fill="#2F3D2C" transform="translate(268,274)">' +
-            '<path d="M8 6c0-2 4-2 4 0v24c0 2.4-4 2.4-4 0zM8 16H3V9a2.4 2.4 0 0 1 5 0zM12 20h5V11a2.4 2.4 0 0 0-5 0z"/>' +
-          '</g>' +
-        '</svg>' +
+      '<div class="window-wrap logo-lockup">' +
+        '<img src="img/logo.jpg" alt="Taco Libre">' +
       '</div>'
     );
   }
