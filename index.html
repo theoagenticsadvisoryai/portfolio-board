@@ -16,8 +16,9 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,sy
 .pin-dots i{width:14px;height:14px;border-radius:50%;border:2px solid #666}
 .pin-dots i.on{background:#f3f1ea;border-color:#f3f1ea}
 .pad{display:grid;grid-template-columns:repeat(3,88px);gap:12px}
-.pad button{height:64px;border-radius:32px;border:0;background:#1a1c21;color:var(--ink);font-size:24px;font-weight:600}
+.pad button{height:64px;border-radius:32px;border:1px solid #4a4e58;background:#2a2d34;color:var(--ink);font-size:24px;font-weight:600}
 .pad .gone{visibility:hidden}
+.hint{color:var(--muted);font-size:15px;margin:8px 0 0}
 .err{color:var(--stuck);min-height:20px;font-size:14px}
 header{padding:16px 16px 0}
 h1{margin:0;font-size:22px}
@@ -55,6 +56,7 @@ form button{min-width:72px;min-height:44px;border:0;border-radius:10px;backgroun
 <body>
 <div id="gate">
   <h1>Portfolio</h1>
+  <p class="hint">Enter PIN</p>
   <p class="err" id="perr"></p>
   <div class="pin-dots" id="dots"><i></i><i></i><i></i><i></i></div>
   <div class="pad">
@@ -172,7 +174,7 @@ document.querySelector(".pad").addEventListener("click", async (e)=>{
   pin += n; setDots();
   if(pin.length<4) return;
   if(await hashPin(pin)===PINH){
-    localStorage.setItem("pb-ok", String(Date.now()+12*60*60*1000));
+    localStorage.setItem("pb-ok", String(Date.now()+30*24*60*60*1000));
     unlock();
   } else {
     err.textContent = "Wrong pin";
