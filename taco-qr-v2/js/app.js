@@ -1,0 +1,704 @@
+(function () {
+  "use strict";
+
+  var KEY = {
+    orders: "tl_orders_v2",
+    eighty: "tl_86_v2",
+    customers: "tl_customers_v2",
+    nextId: "tl_next_id_v2",
+    seeded: "tl_seeded_v2"
+  };
+
+  var MENU = [
+    { id: "birria", label: "Birria", pass: "BIRRIA" },
+    { id: "fish", label: "Fish", pass: "FISH" }
+  ];
+
+  var cart = {
+    mode: "takeaway",
+    step: "menu",
+    units: [],
+    name: "",
+    phone: "",
+    err: "",
+    lastId: null
+  };
+
+  function $(sel, root) {
+    return (root || document).querySelector(sel);
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function load(key, fallback) {
+    try {
+      var raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function save(key, val) {
+    localStorage.setItem(key, JSON.stringify(val));
+  }
+
+  function route() {
+    var h = (location.hash || "#/").replace(/^#/, "");
+    if (!h) h = "/";
+    h = h.split("?")[0];
+    if (h.charAt(0) !== "/") h = "/" + h;
+    if (h.length > 1 && h.slice(-1) === "/") h = h.slice(0, -1);
+    return h;
+  }
+
+  function go(path) {
+    if (location.hash !== "#" + path) location.hash = path;
+    else render();
+  }
+
+  function readySms(order) {
+    if (order.mode === "dine-in") {
+      return "TACO LIBRE #" + order.id + ": your food is up.";
+    }
+    return "TACO LIBRE #" + order.id + ": takeaway is up. Window.";
+  }
+
+  function seed() {
+    if (load(KEY.seeded, false)) return;
+    var orders = [
+      {
+        id: 41,
+        mode: "takeaway",
+        name: "Rosa V",
+        phone: "0412 555 010",
+        status: "open",
+        createdAt: Date.now() - 12 * 60 * 1000,
+        units: [
+          { sku: "birria", noSalsa: false, heat: "hot", noCheese: true, noCoriander: false },
+          { sku: "birria", noSalsa: false, heat: "hot", noCheese: true, noCoriander: false }
+        ]
+      },
+      {
+        id: 42,
+        mode: "dine-in",
+        name: "Tom Keane",
+        phone: "0433 555 019",
+        status: "open",
+        createdAt: Date.now() - 6 * 60 * 1000,
+        units: [
+          { sku: "fish", noSalsa: false, heat: "medium", noCheese: false, noCoriander: true }
+        ]
+      }
+    ];
+    save(KEY.orders, orders);
+    save(KEY.customers, [
+      { name: "Rosa V", phone: "0412555010", orderIds: [41] },
+      { name: "Tom Keane", phone: "0433555019", orderIds: [42] }
+    ]);
+    save(KEY.eighty, { birria: false, fish: false });
+    save(KEY.nextId, 43);
+    save(KEY.seeded, true);
+  }
+
+  function orders() { return load(KEY.orders, []); }
+  function setOrders(list) { save(KEY.orders, list); }
+  function eighty() { return load(KEY.eighty, { birria: false, fish: false }); }
+  function customers() { return load(KEY.customers, []); }
+
+  function digits(phone) {
+    return String(phone || "").replace(/\D/g, "");
+  }
+
+  function upsertCustomer(name, phone, orderId) {
+    var d = digits(phone);
+    var list = customers();
+    var found = null;
+    for (var i = 0; i < list.length; i++) {
+      if (digits(list[i].phone) === d) { found = list[i]; break; }
+    }
+    if (found) {
+      if (name && !found.name) found.name = name;
+      if (found.orderIds.indexOf(orderId) === -1) found.orderIds.push(orderId);
+    } else {
+      list.push({ name: name || "", phone: d, orderIds: [orderId] });
+    }
+    save(KEY.customers, list);
+  }
+
+  function skuMeta(id) {
+    for (var i = 0; i < MENU.length; i++) if (MENU[i].id === id) return MENU[i];
+    return { id: id, label: id, pass: id.toUpperCase() };
+  }
+
+  function countSku(sku) {
+    var n = 0;
+    for (var i = 0; i < cart.units.length; i++) if (cart.units[i].sku === sku) n++;
+    return n;
+  }
+
+  function addUnit(sku) {
+    cart.units.push({
+      uid: "u" + Date.now() + Math.random().toString(16).slice(2),
+      sku: sku,
+      noSalsa: false,
+      noCheese: false,
+      noCoriander: false,
+      heat: "medium"
+    });
+  }
+
+  function removeUnit(sku) {
+    for (var i = cart.units.length - 1; i >= 0; i--) {
+      if (cart.units[i].sku === sku) {
+        cart.units.splice(i, 1);
+        return;
+      }
+    }
+  }
+
+  function resetCart(mode) {
+    cart.mode = mode;
+    cart.step = "menu";
+    cart.units = [];
+    cart.name = "";
+    cart.phone = "";
+    cart.err = "";
+    cart.lastId = null;
+  }
+
+  function windowArt() {
+    return (
+      '<div class="window-wrap" aria-hidden="true">' +
+        '<svg viewBox="0 0 320 332" xmlns="http://www.w3.org/2000/svg">' +
+          '<defs>' +
+            '<pattern id="stip" width="9" height="8" patternUnits="userSpaceOnUse">' +
+              '<path d="M0.8 2.2 h3.1" stroke="#2F3D2C" stroke-width="0.65" fill="none" opacity="0.32"/>' +
+              '<path d="M4.6 6.1 h2.4" stroke="#2F3D2C" stroke-width="0.5" fill="none" opacity="0.2"/>' +
+            '</pattern>' +
+            '<clipPath id="frameClip">' +
+              '<rect x="110" y="66" width="100" height="192"/>' +
+            '</clipPath>' +
+          '</defs>' +
+          '<rect width="320" height="332" fill="#F3E6C8"/>' +
+          '<text x="160" y="48" text-anchor="middle" font-family="Big Shoulders Display, Anton, Impact, sans-serif" font-weight="800" font-size="54" letter-spacing="7" fill="#2F3D2C">TACO</text>' +
+          '<rect x="106" y="62" width="108" height="200" fill="#F3E6C8" stroke="#2F3D2C" stroke-width="2.6"/>' +
+          '<rect x="110" y="66" width="100" height="192" fill="url(#stip)" stroke="#2F3D2C" stroke-width="0.7"/>' +
+          '<g clip-path="url(#frameClip)">' +
+            '<g fill="#2F3D2C">' +
+              '<path d="M141 108 C141 84 179 84 179 108 Z"/>' +
+              '<rect x="141" y="102" width="38" height="7"/>' +
+              '<ellipse cx="160" cy="112" rx="48" ry="9"/>' +
+              '<path d="M143 114 C143 114 141 120 141 134 C141 152 149 160 160 162 C171 160 179 152 179 134 C179 120 177 114 177 114 C170 111 150 111 143 114 Z"/>' +
+              '<rect x="154" y="160" width="12" height="10"/>' +
+              '<path d="M128 170 L192 170 L204 256 L116 256 Z"/>' +
+              '<path d="M128 170 L116 190 L128 190 Z"/>' +
+              '<path d="M192 170 L204 190 L192 190 Z"/>' +
+            '</g>' +
+            '<ellipse cx="151.5" cy="132" rx="5.6" ry="4.3" fill="#F3E6C8"/>' +
+            '<ellipse cx="168.5" cy="132" rx="5.6" ry="4.3" fill="#F3E6C8"/>' +
+            '<path d="M160 119 L163.4 125.5 H156.6 Z" fill="#F3E6C8"/>' +
+            '<rect x="156" y="146" width="8" height="2.2" rx="1" fill="#F3E6C8"/>' +
+            '<g fill="#F3E6C8">' +
+              '<circle cx="146" cy="190" r="5.2"/>' +
+              '<circle cx="174" cy="190" r="5.2"/>' +
+              '<circle cx="160" cy="210" r="5.2"/>' +
+              '<circle cx="144" cy="228" r="5.2"/>' +
+              '<circle cx="176" cy="228" r="5.2"/>' +
+              '<circle cx="160" cy="246" r="5.2"/>' +
+            '</g>' +
+          '</g>' +
+          '<text x="160" y="296" text-anchor="middle" font-family="Big Shoulders Display, Anton, Impact, sans-serif" font-weight="800" font-size="46" letter-spacing="6" fill="#2F3D2C">LIBRE</text>' +
+          '<g fill="#2F3D2C" transform="translate(28,286)">' +
+            '<path d="M16 28 L15 4 l2 3 Z M16 28 L6 10 l4 3 Z M16 28 L26 10 l-4 3 Z M16 28 L2 20 l5 2 Z M16 28 L30 20 l-5 2 Z"/>' +
+          '</g>' +
+          '<g fill="#2F3D2C" transform="translate(268,274)">' +
+            '<path d="M8 6c0-2 4-2 4 0v24c0 2.4-4 2.4-4 0zM8 16H3V9a2.4 2.4 0 0 1 5 0zM12 20h5V11a2.4 2.4 0 0 0-5 0z"/>' +
+          '</g>' +
+        '</svg>' +
+      '</div>'
+    );
+  }
+
+  function footGuest() {
+    return '<p class="demo-foot">DEMO — no live cards.</p>';
+  }
+
+  function viewWall() {
+    return (
+      '<div class="poster">' +
+        windowArt() +
+        '<div class="doors">' +
+          '<a class="door take" href="#/takeaway">' +
+            '<span class="big">TAKEAWAY</span>' +
+            '<span class="kicker">Scan. We\'ll text you.</span>' +
+          '</a>' +
+          '<a class="door dine" href="#/dine-in">' +
+            '<span class="big">DINE IN</span>' +
+            '<span class="kicker">Scan. Stay.</span>' +
+          '</a>' +
+        '</div>' +
+        '<div class="staff-links">' +
+          '<a href="#/pass">Pass</a>' +
+          '<a href="#/admin">Admin</a>' +
+        '</div>' +
+        footGuest() +
+      '</div>'
+    );
+  }
+
+  function introBlock() {
+    var dine = cart.mode === "dine-in";
+    var modeWord = dine ? "Dine in" : "Takeaway";
+    var line = dine ? "Two tacos. You stay." : "Two tacos. Out the window.";
+    return (
+      '<div class="intro ' + (dine ? "dine" : "take") + '">' +
+        '<p class="brand">TACO LIBRE</p>' +
+        '<p class="mode">' + modeWord + '</p>' +
+        '<p class="line">' + line + '</p>' +
+      '</div>'
+    );
+  }
+
+  function viewMenu() {
+    var six = eighty();
+    var cards = MENU.map(function (m) {
+      var n = countSku(m.id);
+      var gone = !!six[m.id];
+      return (
+        '<div class="item' + (gone ? " gone" : "") + '">' +
+          '<h2>' + esc(m.label) + '</h2>' +
+          (gone
+            ? '<div class="stamp-86">86</div>'
+            : '<div class="stepper">' +
+                '<button type="button" data-act="minus" data-sku="' + m.id + '" ' + (n === 0 ? "disabled" : "") + '>−</button>' +
+                '<span class="qty">' + n + '</span>' +
+                '<button type="button" data-act="plus" data-sku="' + m.id + '">+</button>' +
+              '</div>') +
+        '</div>'
+      );
+    }).join("");
+    return (
+      introBlock() +
+      '<h1 class="screen-title">What\'s through the window.</h1>' +
+      cards +
+      '<div class="sticky-cta">' +
+        '<button class="btn" type="button" data-act="to-mods" ' + (cart.units.length ? "" : "disabled") + '>Next</button>' +
+      '</div>' +
+      footGuest()
+    );
+  }
+
+  function tickBtn(on, act, uid, label) {
+    return (
+      '<button type="button" class="tick' + (on ? " on" : "") + '" data-act="' + act + '" data-uid="' + uid + '">' +
+        '<span class="box">' + (on ? "×" : "") + '</span>' +
+        label +
+      '</button>'
+    );
+  }
+
+  function viewMods() {
+    var cards = cart.units.map(function (u, i) {
+      var meta = skuMeta(u.sku);
+      var heat = "";
+      if (!u.noSalsa) {
+        heat =
+          '<div class="heat">' +
+            '<button type="button" class="hot' + (u.heat === "hot" ? " on" : "") + '" data-act="heat" data-uid="' + u.uid + '" data-heat="hot">Hot</button>' +
+            '<button type="button" class="med' + (u.heat === "medium" ? " on" : "") + '" data-act="heat" data-uid="' + u.uid + '" data-heat="medium">Medium</button>' +
+          '</div>';
+      }
+      return (
+        '<div class="mod-card">' +
+          '<div class="who">' + esc(meta.pass) + " · " + (i + 1) + "</div>" +
+          '<div class="ticks">' +
+            tickBtn(u.noSalsa, "tick-salsa", u.uid, "No salsa") +
+            tickBtn(u.noCheese, "tick-cheese", u.uid, "No cheese") +
+            tickBtn(u.noCoriander, "tick-coriander", u.uid, "No coriander") +
+          "</div>" +
+          heat +
+        "</div>"
+      );
+    }).join("");
+    return (
+      introBlock() +
+      '<h1 class="screen-title">Leave it off.</h1>' +
+      cards +
+      '<div class="sticky-cta">' +
+        '<button class="btn" type="button" data-act="to-pay">Next</button>' +
+        '<button class="btn ghost" type="button" data-act="to-menu">Back</button>' +
+      "</div>" +
+      footGuest()
+    );
+  }
+
+  function unitTicks(u) {
+    var t = [];
+    if (u.noSalsa) t.push("No salsa");
+    else t.push(u.heat === "hot" ? "Hot" : "Medium");
+    if (u.noCheese) t.push("No cheese");
+    if (u.noCoriander) t.push("No coriander");
+    return t;
+  }
+
+  function groupUnits(units) {
+    var groups = [];
+    var map = {};
+    for (var i = 0; i < units.length; i++) {
+      var u = units[i];
+      var key = [u.sku, u.noSalsa, u.heat || "", u.noCheese, u.noCoriander].join("|");
+      if (!map[key]) {
+        map[key] = { sku: u.sku, qty: 0, ticks: unitTicks(u) };
+        groups.push(map[key]);
+      }
+      map[key].qty += 1;
+    }
+    return groups;
+  }
+
+  function viewPay() {
+    var groups = groupUnits(cart.units);
+    var lines = groups.map(function (g) {
+      var ticks = g.ticks.length
+        ? '<span class="mods">' + esc(g.ticks.join(" · ")) + "</span>"
+        : "";
+      return "<li><span>" + esc(skuMeta(g.sku).pass) + " ×" + g.qty + ticks + "</span></li>";
+    }).join("");
+    return (
+      introBlock() +
+      '<div class="phone-copy">' +
+        '<p class="lead">Your number.</p>' +
+        '<p class="sub">We text when it\'s up.</p>' +
+      "</div>" +
+      '<label class="field">Your name.' +
+        '<input id="f-name" type="text" autocomplete="name" value="' + esc(cart.name) + '">' +
+      "</label>" +
+      '<label class="field">Your number.' +
+        '<input id="f-phone" type="tel" inputmode="tel" autocomplete="tel" value="' + esc(cart.phone) + '">' +
+      "</label>" +
+      '<p class="err" id="f-err">' + esc(cart.err) + "</p>" +
+      '<ul class="summary">' + lines + "</ul>" +
+      '<p class="pay-note">Demo only. No card. No charge.</p>' +
+      '<div class="sticky-cta">' +
+        '<button class="btn" type="button" data-act="send">Send the ticket</button>' +
+        '<button class="btn ghost" type="button" data-act="to-mods">Back</button>' +
+      "</div>" +
+      footGuest()
+    );
+  }
+
+  function viewDone() {
+    return (
+      '<div class="success">' +
+        '<h1>It\'s in.</h1>' +
+        '<p class="line">We\'ll text you.</p>' +
+        (cart.lastId ? '<p class="orderno">#' + cart.lastId + "</p>" : "") +
+      "</div>" +
+      '<div class="sticky-cta">' +
+        '<a class="btn" href="#/" style="display:grid;place-items:center;text-decoration:none">Wall</a>' +
+      "</div>" +
+      footGuest()
+    );
+  }
+
+  function ticketLinesHtml(order) {
+    return groupUnits(order.units).map(function (g) {
+      var ticks = g.ticks.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
+      return (
+        '<div class="t-line">' +
+          '<div class="t-sku">' + esc(skuMeta(g.sku).pass) + " ×" + g.qty + "</div>" +
+          (ticks ? '<ul class="t-ticks">' + ticks + "</ul>" : "") +
+        "</div>"
+      );
+    }).join("");
+  }
+
+  function viewPass() {
+    var list = orders().slice().sort(function (a, b) {
+      if (a.status !== b.status) return a.status === "open" ? -1 : 1;
+      return b.createdAt - a.createdAt;
+    });
+    var html = '<h1 class="staff-head">Pass</h1>';
+    if (!list.length) html += '<p class="empty">No tickets.</p>';
+    html += list.map(function (o) {
+      var dine = o.mode === "dine-in";
+      var ready = o.status === "ready";
+      var sms = readySms(o);
+      return (
+        '<article class="ticket' + (dine ? " dine" : "") + (ready ? " ready" : "") + '">' +
+          '<div class="ticket-head">' + (dine ? "DINE IN" : "TAKEAWAY") + "</div>" +
+          '<div class="num">#' + o.id + "</div>" +
+          ticketLinesHtml(o) +
+          (ready
+            ? ""
+            : '<button class="btn small" type="button" data-act="ready" data-id="' + o.id + '">Mark Ready</button>') +
+          '<div class="sms"><span class="cap">' +
+            (ready ? "Would have sent — not sent" : "Ready SMS — not sent") +
+          "</span>" + esc(sms) + "</div>" +
+        "</article>"
+      );
+    }).join("");
+    html +=
+      '<div class="staff-links">' +
+        '<a href="#/">Wall</a>' +
+        '<a href="#/admin">Admin</a>' +
+      "</div>";
+    return html;
+  }
+
+  function viewAdmin() {
+    var six = eighty();
+    var rows = MENU.map(function (m) {
+      var on = !six[m.id];
+      return (
+        '<div class="row86">' +
+          "<h2>" + esc(m.label) + "</h2>" +
+          '<button type="button" class="sw ' + (on ? "on" : "off") + '" data-act="86" data-sku="' + m.id + '">' +
+            (on ? "ON" : "86") +
+          "</button>" +
+        "</div>"
+      );
+    }).join("");
+    var cust = customers();
+    var table =
+      '<table class="cust"><thead><tr><th>Name</th><th>Phone</th><th>Orders</th></tr></thead><tbody>' +
+      cust.map(function (c) {
+        return (
+          "<tr><td>" + esc(c.name) + "</td><td>" + esc(c.phone) + "</td><td>#" +
+          esc((c.orderIds || []).join(" #")) +
+          "</td></tr>"
+        );
+      }).join("") +
+      "</tbody></table>";
+    return (
+      '<h1 class="staff-head">Admin</h1>' +
+      '<p class="note">86 an item. The window list is yours — download it.</p>' +
+      rows +
+      table +
+      '<button class="btn" type="button" data-act="csv">Download CSV</button>' +
+      '<div class="staff-links">' +
+        '<a href="#/">Wall</a>' +
+        '<a href="#/pass">Pass</a>' +
+      "</div>"
+    );
+  }
+
+  function csvEscape(s) {
+    s = String(s == null ? "" : s);
+    if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function downloadCsv() {
+    var lines = ["name,phone,order_ids"];
+    customers().forEach(function (c) {
+      lines.push(
+        [csvEscape(c.name), csvEscape(c.phone), csvEscape((c.orderIds || []).join("|"))].join(",")
+      );
+    });
+    var blob = new Blob([lines.join("\n") + "\n"], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "taco-libre-customers.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 500);
+  }
+
+  function placeOrder() {
+    cart.name = ($("#f-name") && $("#f-name").value || "").trim();
+    cart.phone = ($("#f-phone") && $("#f-phone").value || "").trim();
+    cart.err = "";
+    if (!cart.name) {
+      cart.err = "Name.";
+      render();
+      return;
+    }
+    if (digits(cart.phone).length < 8) {
+      cart.err = "Number.";
+      render();
+      return;
+    }
+    var id = load(KEY.nextId, 43);
+    save(KEY.nextId, id + 1);
+    var order = {
+      id: id,
+      mode: cart.mode,
+      name: cart.name,
+      phone: cart.phone,
+      status: "open",
+      createdAt: Date.now(),
+      units: cart.units.map(function (u) {
+        return {
+          sku: u.sku,
+          noSalsa: !!u.noSalsa,
+          heat: u.noSalsa ? "" : (u.heat || "medium"),
+          noCheese: !!u.noCheese,
+          noCoriander: !!u.noCoriander
+        };
+      })
+    };
+    var list = orders();
+    list.push(order);
+    setOrders(list);
+    upsertCustomer(cart.name, cart.phone, id);
+    cart.lastId = id;
+    cart.step = "done";
+    render();
+  }
+
+  function findUnit(uid) {
+    for (var i = 0; i < cart.units.length; i++) {
+      if (cart.units[i].uid === uid) return cart.units[i];
+    }
+    return null;
+  }
+
+  function onClick(e) {
+    var t = e.target.closest("[data-act]");
+    if (!t) return;
+    var act = t.getAttribute("data-act");
+    var sku = t.getAttribute("data-sku");
+    var uid = t.getAttribute("data-uid");
+    var six = eighty();
+
+    if (act === "plus") {
+      if (six[sku]) return;
+      addUnit(sku);
+      render();
+      return;
+    }
+    if (act === "minus") {
+      removeUnit(sku);
+      render();
+      return;
+    }
+    if (act === "to-mods") {
+      if (!cart.units.length) return;
+      cart.step = "mods";
+      render();
+      return;
+    }
+    if (act === "to-menu") {
+      cart.step = "menu";
+      render();
+      return;
+    }
+    if (act === "to-pay") {
+      cart.step = "pay";
+      cart.err = "";
+      render();
+      return;
+    }
+    if (act === "tick-salsa") {
+      var u = findUnit(uid);
+      if (!u) return;
+      u.noSalsa = !u.noSalsa;
+      if (!u.noSalsa && !u.heat) u.heat = "medium";
+      render();
+      return;
+    }
+    if (act === "tick-cheese") {
+      u = findUnit(uid);
+      if (!u) return;
+      u.noCheese = !u.noCheese;
+      render();
+      return;
+    }
+    if (act === "tick-coriander") {
+      u = findUnit(uid);
+      if (!u) return;
+      u.noCoriander = !u.noCoriander;
+      render();
+      return;
+    }
+    if (act === "heat") {
+      u = findUnit(uid);
+      if (!u) return;
+      u.heat = t.getAttribute("data-heat");
+      render();
+      return;
+    }
+    if (act === "send") {
+      placeOrder();
+      return;
+    }
+    if (act === "ready") {
+      var id = parseInt(t.getAttribute("data-id"), 10);
+      var list = orders();
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].id === id) list[i].status = "ready";
+      }
+      setOrders(list);
+      render();
+      return;
+    }
+    if (act === "86") {
+      six[sku] = !six[sku];
+      save(KEY.eighty, six);
+      if (six[sku]) {
+        cart.units = cart.units.filter(function (x) { return x.sku !== sku; });
+      }
+      render();
+      return;
+    }
+    if (act === "csv") {
+      downloadCsv();
+    }
+  }
+
+  function onInput(e) {
+    if (e.target.id === "f-name") cart.name = e.target.value;
+    if (e.target.id === "f-phone") cart.phone = e.target.value;
+  }
+
+  var lastOrderRoute = "";
+
+  function render() {
+    seed();
+    var r = route();
+    var app = document.getElementById("app");
+    var title = "Taco Libre";
+
+    if (r === "/takeaway" || r === "/dine-in") {
+      var mode = r === "/dine-in" ? "dine-in" : "takeaway";
+      if (lastOrderRoute !== r) {
+        resetCart(mode);
+        lastOrderRoute = r;
+      }
+      cart.mode = mode;
+      if (cart.step === "mods" && !cart.units.length) cart.step = "menu";
+      if (cart.step === "menu") app.innerHTML = viewMenu();
+      else if (cart.step === "mods") app.innerHTML = viewMods();
+      else if (cart.step === "pay") app.innerHTML = viewPay();
+      else app.innerHTML = viewDone();
+      title = mode === "dine-in" ? "Taco Libre — Dine in" : "Taco Libre — Takeaway";
+    } else if (r === "/pass") {
+      lastOrderRoute = "";
+      app.innerHTML = viewPass();
+      title = "Taco Libre — Pass";
+    } else if (r === "/admin") {
+      lastOrderRoute = "";
+      app.innerHTML = viewAdmin();
+      title = "Taco Libre — Admin";
+    } else {
+      lastOrderRoute = "";
+      app.innerHTML = viewWall();
+    }
+    document.title = title;
+  }
+
+  document.getElementById("app").addEventListener("click", onClick);
+  document.getElementById("app").addEventListener("input", onInput);
+  window.addEventListener("hashchange", render);
+  seed();
+  render();
+})();
