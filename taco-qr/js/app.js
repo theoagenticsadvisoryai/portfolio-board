@@ -10,12 +10,12 @@
   };
 
   var MENU = [
-    { id: "birria", label: "Birria", pass: "BIRRIA", price: 9, kind: "taco" },
-    { id: "fish", label: "Fish", pass: "FISH", price: 14, kind: "taco" },
-    { id: "chicken", label: "Chicken chipotle", pass: "CHICKEN", price: 9, kind: "taco" },
-    { id: "quesadilla", label: "Mushroom quesadilla", pass: "QUESADILLA", price: 9, kind: "quesadilla" },
-    { id: "elotes", label: "Corn ribs", pass: "ELOTES", sub: "Elotes", price: 12, kind: "side" },
-    { id: "churros", label: "Nutella churros", pass: "CHURROS", sub: "Serve of 8 minis", price: 15, kind: "sweet" }
+    { id: "birria", label: "Birria Taco", pass: "BIRRIA", price: 9, kind: "taco" },
+    { id: "fish", label: "Fish Taco", pass: "FISH", price: 14, kind: "taco" },
+    { id: "chicken", label: "Chicken Chipotle Taco", pass: "CHICKEN", price: 9, kind: "taco" },
+    { id: "quesadilla", label: "Mushroom Quesadilla", pass: "QUESADILLA", price: 9, kind: "quesadilla" },
+    { id: "elotes", label: "Corn Ribs", pass: "ELOTES", sub: "Elotes", price: 12, kind: "side" },
+    { id: "churros", label: "Nutella Churros", pass: "CHURROS", sub: "Serve of 8 minis", price: 15, kind: "sweet" }
   ];
 
   var cart = {
@@ -266,7 +266,7 @@
             (m.sub ? '<p class="subline">' + esc(m.sub) + '</p>' : '') +
             '<p class="price">' + money(m.price) + '</p></div>' +
           (gone
-            ? '<div class="stamp-86">86</div>'
+            ? '<div class="stamp-86">SOLD OUT</div>'
             : '<div class="stepper">' +
                 '<button type="button" data-act="minus" data-sku="' + m.id + '" ' + (n === 0 ? "disabled" : "") + '>−</button>' +
                 '<span class="qty">' + n + '</span>' +
@@ -468,7 +468,7 @@
         '<div class="row86">' +
           "<h2>" + esc(m.label) + "</h2>" +
           '<button type="button" class="sw ' + (on ? "on" : "off") + '" data-act="86" data-sku="' + m.id + '">' +
-            (on ? "ON" : "86") +
+            (on ? "Sold out" : "Back on") +
           "</button>" +
         "</div>"
       );
@@ -486,7 +486,7 @@
       "</tbody></table>";
     return (
       '<h1 class="staff-head">Admin</h1>' +
-      '<p class="note">86 an item. The window list is yours — download it.</p>' +
+      '<p class="note">Tap Sold out when a dish is gone. Tap Back on to put it up again.</p>' +
       rows +
       table +
       '<button class="btn" type="button" data-act="csv">Download CSV</button>' +

@@ -233,10 +233,10 @@ h1.screen-title {
 }
 .stamp-86 {
   position: absolute;
-  right: 14px;
-  top: 14px;
+  right: 10px;
+  top: 12px;
   font-family: var(--display);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   color: var(--red-hot);
   border: 2px solid var(--red-hot);
   padding: 2px 8px 0;
@@ -503,7 +503,7 @@ label.field input:focus { outline: 2px solid var(--amber); outline-offset: 1px; 
 }
 .row86 h2 { margin: 0; font-size: 20px; }
 .sw {
-  min-width: 92px;
+  min-width: 118px;
   min-height: 48px;
   border: 0;
   font-family: var(--display);
