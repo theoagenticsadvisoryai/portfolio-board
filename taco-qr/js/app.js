@@ -296,8 +296,16 @@
   }
 
   function viewMods() {
-    var cards = cart.units.map(function (u, i) {
+    var skuCounts = {};
+    cart.units.forEach(function (u) {
+      skuCounts[u.sku] = (skuCounts[u.sku] || 0) + 1;
+    });
+    var skuSeen = {};
+    var cards = cart.units.map(function (u) {
       var meta = skuMeta(u.sku);
+      skuSeen[u.sku] = (skuSeen[u.sku] || 0) + 1;
+      var who = meta.label;
+      if (skuCounts[u.sku] > 1) who += " #" + skuSeen[u.sku];
       var ticks = "";
       var heat = "";
       if (meta.kind === "taco") {
@@ -322,7 +330,7 @@
       }
       return (
         '<div class="mod-card">' +
-          '<div class="who">' + esc(meta.pass) + " · " + (i + 1) + " · " + money(meta.price) + "</div>" +
+          '<div class="who">' + esc(who) + "</div>" +
           ticks +
           heat +
         "</div>"
@@ -330,7 +338,7 @@
     }).join("");
     return (
       introBlock() +
-      '<h1 class="screen-title">Leave it off.</h1>' +
+      '<h1 class="screen-title">Customise.</h1>' +
       cards +
       '<div class="sticky-cta">' +
         '<button class="btn" type="button" data-act="to-pay">Next</button>' +
