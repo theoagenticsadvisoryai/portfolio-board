@@ -1,0 +1,139 @@
+{
+  "pages": [
+    {
+      "id": 143233909042,
+      "body_html": "",
+      "created_at": "2024-11-13T16:55:31+10:30",
+      "published_at": "2024-11-13T16:55:31+10:30",
+      "updated_at": "2024-11-13T16:55:52+10:30",
+      "handle": "brew-guide",
+      "title": "Brew Guide"
+    },
+    {
+      "id": 149704737074,
+      "body_html": "",
+      "created_at": "2025-05-15T15:25:52+09:30",
+      "published_at": "2025-05-15T15:25:50+09:30",
+      "updated_at": "2025-05-18T12:00:07+09:30",
+      "handle": "coffee-quiz",
+      "title": "Quiz"
+    },
+    {
+      "id": 143046279474,
+      "body_html": null,
+      "created_at": "2024-11-08T15:37:26+10:30",
+      "published_at": "2024-11-08T15:37:26+10:30",
+      "updated_at": "2024-11-08T15:37:26+10:30",
+      "handle": "contact",
+      "title": "Contact"
+    },
+    {
+      "id": 143825961266,
+      "body_html": "",
+      "created_at": "2024-11-27T16:01:46+10:30",
+      "published_at": "2024-11-27T16:01:46+10:30",
+      "updated_at": "2024-11-27T16:01:46+10:30",
+      "handle": "email-signup",
+      "title": "Email Signup"
+    },
+    {
+      "id": 143233941810,
+      "body_html": "",
+      "created_at": "2024-11-13T16:56:13+10:30",
+      "published_at": "2024-11-13T16:56:13+10:30",
+      "updated_at": "2024-11-26T17:54:08+10:30",
+      "handle": "faqs",
+      "title": "FAQs"
+    },
+    {
+      "id": 143233974578,
+      "body_html": "",
+      "created_at": "2024-11-13T16:56:21+10:30",
+      "published_at": "2024-11-13T16:56:21+10:30",
+      "updated_at": "2024-11-13T16:56:21+10:30",
+      "handle": "feedback",
+      "title": "Feedback"
+    },
+    {
+      "id": 143783887154,
+      "body_html": "",
+      "created_at": "2024-11-26T16:48:27+10:30",
+      "published_at": "2024-11-26T16:48:27+10:30",
+      "updated_at": "2024-11-26T18:14:43+10:30",
+      "handle": "our-stores",
+      "title": "Our Stores"
+    },
+    {
+      "id": 143234138418,
+      "body_html": "",
+      "created_at": "2024-11-13T16:58:21+10:30",
+      "published_at": "2024-11-13T16:58:21+10:30",
+      "updated_at": "2024-11-14T16:03:27+10:30",
+      "handle": "our-story",
+      "title": "Our Story"
+    },
+    {
+      "id": 143814918450,
+      "body_html": "",
+      "created_at": "2024-11-27T10:17:26+10:30",
+      "published_at": "2024-11-27T10:17:26+10:30",
+      "updated_at": "2024-11-27T10:17:26+10:30",
+      "handle": "privacy-policy",
+      "title": "Privacy Policy"
+    },
+    {
+      "id": 149670494514,
+      "body_html": "",
+      "created_at": "2025-05-14T15:46:38+09:30",
+      "published_at": "2025-05-14T15:46:38+09:30",
+      "updated_at": "2025-05-14T15:47:16+09:30",
+      "handle": "refund-policy",
+      "title": "Refund Policy"
+    },
+    {
+      "id": 143223226674,
+      "body_html": "",
+      "created_at": "2024-11-13T11:34:56+10:30",
+      "published_at": "2024-11-13T11:34:56+10:30",
+      "updated_at": "2024-11-22T15:13:18+10:30",
+      "handle": "stockists",
+      "title": "Stockists"
+    },
+    {
+      "id": 149699952946,
+      "body_html": "<!-- Start Stockist.co widget -->\n<stockist-store-locator data-stockist-widget-tag=\"map_9q965p43\">\n  Loading store locator from <a href=\"https://stockist.co\">Stockist store locator</a>...\n</stockist-store-locator>\n<script async src=\"https://stockist.co/embed/v1/widget.min.js\"></script>\n<!-- End Stockist.co widget -->",
+      "created_at": "2025-05-15T12:40:06+09:30",
+      "published_at": "2025-05-15T12:40:06+09:30",
+      "updated_at": "2025-05-15T12:40:06+09:30",
+      "handle": "store-locator",
+      "title": "Store Locator"
+    },
+    {
+      "id": 143233843506,
+      "body_html": "",
+      "created_at": "2024-11-13T16:55:08+10:30",
+      "published_at": "2024-11-13T16:55:08+10:30",
+      "updated_at": "2025-05-19T12:16:25+09:30",
+      "handle": "subscriptions",
+      "title": "Subscriptions"
+    },
+    {
+      "id": 143234007346,
+      "body_html": "",
+      "created_at": "2024-11-13T16:56:36+10:30",
+      "published_at": "2024-11-13T16:56:36+10:30",
+      "updated_at": "2024-11-27T10:17:31+10:30",
+      "handle": "terms-conditions",
+      "title": "Terms & Conditions"
+    },
+    {
+      "id": 143233876274,
+      "body_html": "",
+      "created_at": "2024-11-13T16:55:23+10:30",
+      "published_at": "2024-11-13T16:55:23+10:30",
+      "updated_at": "2024-11-14T17:45:45+10:30",
+      "handle": "wholesale",
+      "title": "Wholesale"
+    }
+  ]
+}

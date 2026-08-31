@@ -51,6 +51,7 @@ form{display:flex;gap:8px;margin-top:8px}
 form textarea{flex:1;min-height:44px;border-radius:10px;border:1px solid var(--line);background:#111;color:var(--ink);padding:10px;font:inherit}
 form button{min-width:72px;min-height:44px;border:0;border-radius:10px;background:#8ab4ff;color:#111;font-weight:700}
 .ok{color:#3dba7a;font-size:12px;margin-top:6px}
+.card a.open-link{display:inline-block;margin-top:10px;color:#8ab4ff;font-weight:700;font-size:14px}
 </style>
 </head>
 <body>
@@ -106,6 +107,11 @@ const TILES = [
   {id:"chaffey-sia", brand:"chaffey", status:"stuck", title:"SIA wine tender",
     bot:"Periscope is handling this. We are not hunting it.",
     bg:"Wine tender through SIA. Theo said 27 Aug that Periscope is handling it. Joseph is not hunting TR2486 and is not reaching out."},
+  {id:"hark-failover", brand:"hark", status:"moving", title:"Storefront preview",
+    href:"hark-failover/",
+    link:"Open on this phone",
+    bot:"HTTPS preview. Not the live shop.",
+    bg:"Public scrape of the Hark storefront, on GitHub Pages at hark-failover. Marked PREVIEW. Not on harkcoffee.com.au. Cart/checkout is a named gap to hark-coffee.myshopify.com. No invented SKUs. For Dad roast is still 404 on the live shop."},
   {id:"hark-workplaces", brand:"hark", status:"stuck", title:"Workplace samples",
     bot:"No named yes since 24 Aug. $0 doors are on.",
     bg:"Free samples to Adelaide offices and clinics, then weekly drops.\n\nNo named yes since 24 Aug. Delivery and follow-up are the constraint, not roasting. Do not contact Sam or prospects."},
@@ -207,6 +213,7 @@ function renderTiles(){
     const togLabel = t.room ? "What this is" : "Open";
     el.innerHTML = `<div class="row"><b>${esc(t.title)}</b><span class="pill ${t.status}">${LABELS[t.status]}</span></div>
       <p class="bot">${esc(t.bot)}</p>
+      ${t.href ? `<a class="open-link" href="${esc(t.href)}">${esc(t.link || "Open")}</a>` : ""}
       <button class="tog" type="button">${togLabel}</button>
       <div class="more">${esc(t.bg)}</div>
       <div class="thread"><h3>${t.room ? "Room" : "Notes"}</h3>${thread}
