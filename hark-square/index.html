@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
 <title>Hark · Square sales</title>
 <style>
   :root {
@@ -187,12 +188,37 @@
   @media (min-width: 960px) {
     .months { grid-template-columns: 1fr; max-width: 560px; }
   }
+
+  #gate{position:fixed;inset:0;background:#0e0f12;color:#f3f1ea;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9;padding:24px;font-family:-apple-system,system-ui,sans-serif}
+  #gate.hid{display:none}
+  #app.hid{display:none}
+  #gate h1{margin:0;font-size:22px;color:#f3f1ea;letter-spacing:0;text-transform:none;font-family:-apple-system,system-ui,sans-serif;font-weight:600}
+  #gate .hint{color:#9a968c;font-size:15px;margin:8px 0 0}
+  #gate .err{color:#e85d4c;min-height:20px;font-size:14px}
+  #gate .pin-dots{display:flex;gap:12px;margin:16px 0 24px}
+  #gate .pin-dots i{width:14px;height:14px;border-radius:50%;border:2px solid #666;display:block}
+  #gate .pin-dots i.on{background:#f3f1ea;border-color:#f3f1ea}
+  #gate .pad{display:grid;grid-template-columns:repeat(3,88px);gap:12px}
+  #gate .pad button{height:64px;border-radius:32px;border:1px solid #4a4e58;background:#2a2d34;color:#f3f1ea;font-size:24px;font-weight:600;font-family:-apple-system,system-ui,sans-serif}
+  #gate .pad .gone{visibility:hidden}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div id="gate">
+  <h1>Hark · Square sales</h1>
+  <p class="hint">Enter PIN</p>
+  <p class="err" id="perr"></p>
+  <div class="pin-dots" id="dots"><i></i><i></i><i></i><i></i></div>
+  <div class="pad">
+    <button type="button">1</button><button type="button">2</button><button type="button">3</button>
+    <button type="button">4</button><button type="button">5</button><button type="button">6</button>
+    <button type="button">7</button><button type="button">8</button><button type="button">9</button>
+    <button type="button" class="gone"> </button><button type="button">0</button><button type="button" id="bk">⌫</button>
+  </div>
+</div>
+<div class="wrap hid" id="app">
   <header class="top">
-    <div class="brand"><img class="logo" src="hark-logo.png" alt="Hark"></div>
+    <div class="brand"><img class="logo" src="/portfolio-board/hark-square/hark-logo.png" alt="Hark"></div>
     <div class="meta">
       <strong>Square sales</strong>
       21 Dec 2023 – 31 Aug 2026<br>
@@ -263,7 +289,7 @@
 
   <footer class="foot">
     Source: Square daily sales summary emails to theo@harkcoffee.com (Square Reports &lt;noreply@messaging.squareup.com&gt;).<br>
-    Last pulled 31 Aug 2026, 5:01 pm ACST. Not a live POS feed. Mailbox Square summaries start 21 Dec 2023. 1,665 daily rows. Not published.
+    Last pulled 31 Aug 2026, 5:01 pm ACST. Not a live POS feed. Mailbox Square summaries start 21 Dec 2023. 1,665 daily rows. PIN-gated phone board.
   </footer>
 </div>
 
@@ -46972,7 +46998,7 @@
     // Prefer embedded payload so the phone board works even if daily.json is absent.
     // Optional refresh: fetch daily.json when present, else keep embedded.
     if (location.protocol === "file:") return Promise.resolve(embedded);
-    return fetch("daily.json", { cache: "no-store" })
+    return fetch("/portfolio-board/hark-square/daily.json", { cache: "no-store" })
       .then(function (res) { return res.ok ? res.json() : embedded; })
       .catch(function () { return embedded; });
   }
@@ -47423,19 +47449,55 @@
     stroke("Hark Roastery", "#B07A45", 1.7);
   }
 
-  loadPayload().then(render).catch(function (err) {
-    document.getElementById("hero").textContent = "Could not load daily.json";
-    console.error(err);
-  });
-
-  window.addEventListener("resize", function () {
-    const t = window.__harkResize;
-    if (t) clearTimeout(t);
-    window.__harkResize = setTimeout(function () {
-      loadPayload().then(render);
-    }, 120);
-  });
+  function boot() {
+    if (window.__harkBooted) return;
+    window.__harkBooted = true;
+    loadPayload().then(render).catch(function (err) {
+      document.getElementById("hero").textContent = "Could not load daily.json";
+      console.error(err);
+    });
+    window.addEventListener("resize", function () {
+      const t = window.__harkResize;
+      if (t) clearTimeout(t);
+      window.__harkResize = setTimeout(function () {
+        loadPayload().then(render);
+      }, 120);
+    });
+  }
+  window.__harkBoot = boot;
 })();
+</script>
+<script>
+const PINH = "2f52d3668bcf647312608288b13ed052520ccb72c16ef301414f3e27003d61c7";
+async function hashPin(p){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(p+":pb-v2"));
+  return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+function unlock(){
+  document.getElementById("gate").classList.add("hid");
+  document.getElementById("app").classList.remove("hid");
+  if (window.__harkBoot) window.__harkBoot();
+}
+let pin = "";
+function setDots(){
+  [...document.querySelectorAll("#dots i")].forEach((el,i)=> el.classList.toggle("on", i<pin.length));
+}
+document.querySelector("#gate .pad").addEventListener("click", async (e)=>{
+  const b = e.target.closest("button"); if(!b) return;
+  const err = document.getElementById("perr");
+  if(b.id==="bk"){ pin = pin.slice(0,-1); err.textContent=""; setDots(); return; }
+  const n = b.textContent.trim(); if(!/^\d$/.test(n) || pin.length>=4) return;
+  pin += n; setDots();
+  if(pin.length<4) return;
+  if(await hashPin(pin)===PINH){
+    localStorage.setItem("pb-ok", String(Date.now()+30*24*60*60*1000));
+    unlock();
+  } else {
+    err.textContent = "Wrong pin";
+    pin = ""; setDots();
+  }
+});
+if(Number(localStorage.getItem("pb-ok")||0) > Date.now()) unlock();
 </script>
 </body>
 </html>
