@@ -192,9 +192,9 @@ document.querySelector(".pad").addEventListener("click", async (e)=>{
     pin = ""; setDots();
   }
 });
+let brand = "chaffey";
 if(Number(localStorage.getItem("pb-ok")||0) > Date.now()) unlock();
 
-let brand = "chaffey";
 function renderTabs(){
   const tabs = document.getElementById("tabs");
   tabs.innerHTML = BRANDS.map(b=>`<button type="button" data-id="${b.id}" class="${b.id===brand?"on":""}">${b.name}</button>`).join("");
